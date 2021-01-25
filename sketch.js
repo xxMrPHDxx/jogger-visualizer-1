@@ -2,10 +2,10 @@ const url = "https://gump500-api.glitch.me/api";
 const title = "GUMP500"
 const iconBG = "lightgrey";
 const iconColor= "green";
-const headerH = 50;
+const headerH = 80;
 const spacing = 20;
 const nameSpacing = 20;
-const progressMax = 100, progressSpeed = 10;
+const progressMax = 100, progressSpeed = 4;
 
 function loadImage(url){
   return new Promise((res,rej)=>{
@@ -34,6 +34,8 @@ async function setup(){
   canvas.width = innerWidth;
   canvas.height = innerHeight;
   const ctx = canvas.getContext('2d');
+  // Center all text
+  ctx.textAlign = 'center';
   // load json from api and the icons
   const [data, icon] = await Promise.all([
     fetch(url).then(res=>res.json()),
@@ -55,11 +57,11 @@ async function setup(){
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       // draw title
       ctx.fillStyle = 'black';
-      ctx.font = `"Courier New" ${Math.floor(headerH * 0.75)}px`;
+      ctx.font = `bold 32px "Arial Black"`;
       ctx.fillText(title, canvas.width/2, headerH/2);
       // draw runners
       data.forEach((runner,i)=>draw_runners(ctx,icon,runner,i,maxTotal,j)); 
-    }, j*50);
+    }, j*10);
 }
 
 function draw_runners(ctx, icon, runner, i, maxTotal, j){
@@ -68,24 +70,25 @@ function draw_runners(ctx, icon, runner, i, maxTotal, j){
   const iconsPerRow = Math.floor(ctx.canvas.width/ww);
   const xoff = (ctx.canvas.width - ww*iconsPerRow) / 2;
   const textSize = Math.floor(nameSpacing * 0.75);
+  console.log(textSize);
   //position
   const x = xoff + (i%iconsPerRow) * ww;
   const y = headerH + Math.floor(i/iconsPerRow) * hh;
   //progress
-  const dd = map(runner.total, 0, maxTotal, 0, icon.height);
-  const yy = map(j,0,100,0,dd);
+  const h = map(runner.total, 0, maxTotal, 0, icon.height);
+  const ph = map(j, 0, 100, 0, h);
   ctx.globalCompositeOperation = 'xor';
   ctx.drawImage(icon, x, y, icon.width, icon.height);
   ctx.fillStyle = '#d0d';
-  ctx.fillRect(x, y+icon.height-yy, icon.width, yy);
+  ctx.fillRect(x, y+icon.height-ph, icon.width, ph);
   ctx.globalCompositeOperation = 'source-over';
   //total
   ctx.fillStyle = '#000';
-  ctx.font = `"Courier New" ${textSize}px`;
-  ctx.fillText(Math.round(runner.total, 1)+'', x+16, y+15);
+  ctx.font = `bold 24px "Courier New"`;
+  ctx.fillText(Math.round(runner.total, 1), x+icon.width/2, y+icon.height/2);
   //name
-  const tx = x+icon.width/2-runner.name.length*0.25*textSize, ty = y+icon.height;
-  ctx.fillText(runner.name, tx, ty + (nameSpacing/2));
+  ctx.font = `12px "Courier New"`;
+  ctx.fillText(runner.name, x+icon.width/2, y+icon.height + (nameSpacing/2));
 }
 
 Promise.resolve(setup());
