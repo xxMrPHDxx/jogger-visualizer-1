@@ -1,11 +1,9 @@
 const url = "https://gump500-api.glitch.me/api";
 const title = "GUMP500"
-const iconsPerRow = 6;
 const iconBG = "lightgrey";
 const iconColor= "green";
 const headerH = 50;
-const colSpacing = 20;
-const rowSpacing = 10;
+const spacing = 20;
 const nameSpacing = 20;
 const progressMax = 100, progressSpeed = 10;
 
@@ -49,37 +47,44 @@ async function setup(){
   });
   // sort from ascending
   data.sort((a,b)=>b.total-a.total);
-  // draw title
-  ctx.fillStyle = 'black';
-  ctx.font = `"Courier New" ${Math.floor(headerH * 0.75)}px`;
-  ctx.fillText(title, canvas.width/2, headerH/2);
   // draw runners
-  data.forEach((runner,i)=>draw_runners(ctx,icon,runner,i,maxTotal));
+  for(let j=0; j<=progressMax; j+=progressSpeed)
+    setTimeout(()=>{
+      // background
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // draw title
+      ctx.fillStyle = 'black';
+      ctx.font = `"Courier New" ${Math.floor(headerH * 0.75)}px`;
+      ctx.fillText(title, canvas.width/2, headerH/2);
+      // draw runners
+      data.forEach((runner,i)=>draw_runners(ctx,icon,runner,i,maxTotal,j)); 
+    }, j*50);
 }
 
-function draw_runners(ctx, icon, runner, i, maxTotal, j=0){
+function draw_runners(ctx, icon, runner, i, maxTotal, j){
+  // constants
+  const ww = icon.width + spacing, hh = icon.height + spacing;
+  const iconsPerRow = Math.floor(ctx.canvas.width/ww);
+  const xoff = (ctx.canvas.width - ww*iconsPerRow) / 2;
+  const textSize = Math.floor(nameSpacing * 0.75);
   //position
-  const x = i%iconsPerRow*(icon.width+colSpacing)+(colSpacing/2);
-  const y = headerH + Math.floor(i/iconsPerRow)*(icon.height+rowSpacing+nameSpacing)+(rowSpacing/2);
-  //total
-  ctx.fillText(Math.round(runner.total, 1), x+icon.width*0.24, y+icon.height*0.12);
+  const x = xoff + (i%iconsPerRow) * ww;
+  const y = headerH + Math.floor(i/iconsPerRow) * hh;
   //progress
-  const progressH = icon.height/500*runner.total;
-  if(progressH > icon.height) progressH = icon.height;
-  const yy = map(j,0,100,0,progressH);
+  const dd = map(runner.total, 0, maxTotal, 0, icon.height);
+  const yy = map(j,0,100,0,dd);
+  ctx.globalCompositeOperation = 'xor';
   ctx.drawImage(icon, x, y, icon.width, icon.height);
-  ctx.globalCompositeOperation = 'difference';
-  ctx.fillStyle = 'black';
+  ctx.fillStyle = '#d0d';
   ctx.fillRect(x, y+icon.height-yy, icon.width, yy);
   ctx.globalCompositeOperation = 'source-over';
-  if(j <= progressMax) setTimeout(draw_runners, 100, ctx, icon, runner, i, maxTotal, j+progressSpeed);
-  //name
-  const textSize = Math.floor(nameSpacing * 0.75);
-  const tx = x+icon.width/2-runner.name.length*0.24*textSize, ty = y+icon.height;
-  ctx.fillStyle = 'white';
-  ctx.fillRect(tx, ty, icon.width, textSize*1.2);
-  ctx.fillStyle = 'black';
+  //total
+  ctx.fillStyle = '#000';
   ctx.font = `"Courier New" ${textSize}px`;
+  ctx.fillText(Math.round(runner.total, 1)+'', x+16, y+15);
+  //name
+  const tx = x+icon.width/2-runner.name.length*0.25*textSize, ty = y+icon.height;
   ctx.fillText(runner.name, tx, ty + (nameSpacing/2));
 }
 
