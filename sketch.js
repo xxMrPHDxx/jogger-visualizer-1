@@ -39,7 +39,8 @@ async function setup(){
   // load json from api and the icons
   const [data, icon] = await Promise.all([
     fetch(url).then(res=>res.json()),
-    loadScaledImage('img/jogging.png', 90, 120)
+    // loadScaledImage('img/jogging.png', 90, 120)
+    loadScaledImage('img/jogging.svg', 90, 120)
   ]);
   // recalculate total miles per runner as api doesn't show correct number
   let maxTotal = 0;
@@ -61,7 +62,18 @@ async function setup(){
       ctx.fillText(title, canvas.width/2, headerH/2);
       // draw runners
       data.forEach((runner,i)=>draw_runners(ctx,icon,runner,i,maxTotal,j)); 
-    }, j*10);
+    }, j*1);
+}
+
+function createProgress(w, h, ph){
+  const ctx = document.createElement('canvas').getContext('2d');
+  ctx.canvas.width = w;
+  ctx.canvas.height = h;
+  ctx.fillStyle = '#888';
+  ctx.fillRect(0, 0, w, h-ph);
+  ctx.fillStyle = '#d0d';
+  ctx.fillRect(0, h-ph, w, ph);
+  return ctx.canvas;
 }
 
 function draw_runners(ctx, icon, runner, i, maxTotal, j){
@@ -70,17 +82,16 @@ function draw_runners(ctx, icon, runner, i, maxTotal, j){
   const iconsPerRow = Math.floor(ctx.canvas.width/ww);
   const xoff = (ctx.canvas.width - ww*iconsPerRow) / 2;
   const textSize = Math.floor(nameSpacing * 0.75);
-  console.log(textSize);
   //position
   const x = xoff + (i%iconsPerRow) * ww;
   const y = headerH + Math.floor(i/iconsPerRow) * hh;
   //progress
   const h = map(runner.total, 0, maxTotal, 0, icon.height);
   const ph = map(j, 0, 100, 0, h);
+  const box = createProgress(icon.width, icon.height, ph);
   ctx.globalCompositeOperation = 'xor';
-  ctx.drawImage(icon, x, y, icon.width, icon.height);
-  ctx.fillStyle = '#d0d';
-  ctx.fillRect(x, y+icon.height-ph, icon.width, ph);
+  ctx.drawImage(icon, x, y);
+  ctx.drawImage(box, x, y);
   ctx.globalCompositeOperation = 'source-over';
   //total
   ctx.fillStyle = '#000';
